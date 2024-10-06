@@ -1,42 +1,43 @@
 ﻿using MongoDB.Driver;
 using Reservas.Data;
 using Reservas.Models;
+using Reservas.Repository.Contract;
 
 namespace Reservas.Repository
 {
-    public class ReservationRepository
+    public class ReservationRepository : IReservationRepository
     {
-        private readonly IMongoCollection<Reservetion> _reservetion;
+        private readonly IMongoCollection<Reservation> _reservation;
 
         public ReservationRepository(MongoDbContext context)
         {
-            _reservetion = context.Reservetions;
+            _reservation = context.Reservations;
         }
 
-        public async Task<List<Reservetion>> GetAllAsync()
+        public async Task<List<Reservation>> GetAllAsync()
         {
-            return await _reservetion.Find(reservetion => true).ToListAsync();
+            return await _reservation.Find(reservetion => true).ToListAsync();
         }
 
-        public async Task<Reservetion> GetByIdAsync(string id_reservetion)
+        public async Task<Reservation> GetByIdAsync(string id_reservetion)
         {
-            return await _reservetion.Find<Reservetion>(reservetion => reservetion.Id_reservation == id_reservetion).FirstOrDefaultAsync();
+            return await _reservation.Find<Reservation>(reservetion => reservetion.Id_reservation == id_reservetion).FirstOrDefaultAsync();
         }
 
-        public async Task CreateAsync(Reservetion reservetion)
+        public async Task CreateAsync(Reservation reservetion)
 
         {
-            await _reservetion.InsertOneAsync(reservetion);
+            await _reservation.InsertOneAsync(reservetion);
         }
 
-        public async Task UpdateAsync(string id_reservetion, Reservetion reservetion)
+        public async Task UpdateAsync(string id_reservetion, Reservation reservetion)
         {
-            await _reservetion.ReplaceOneAsync(reservetion => reservetion.Id_reservation == id_reservetion, reservetion);
+            await _reservation.ReplaceOneAsync(reservetion => reservetion.Id_reservation == id_reservetion, reservetion);
         }
 
         public async Task DeleteAsync(string id_reservetion)
         {
-            await _reservetion.DeleteOneAsync(reservetion => id_reservetion == reservetion.Id_reservation);
+            await _reservation.DeleteOneAsync(reservetion => id_reservetion == reservetion.Id_reservation);
         }
     }
 }

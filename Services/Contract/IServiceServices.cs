@@ -2,7 +2,7 @@
 
 namespace Reservas.Services.Contract
 {
-    public interface ServiceService
+    public interface IServiceService
     {
         Task<List<ServiceDto>> GetAllServicesAsync();
         Task<ServiceDto> GetServiceByIdAsync(string id_service);

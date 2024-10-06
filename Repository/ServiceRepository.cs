@@ -1,10 +1,11 @@
 ﻿using MongoDB.Driver;
 using Reservas.Data;
 using Reservas.Models;
+using Reservas.Repository.Contract;
 
 namespace Reservas.Repository
 {
-    public class ServiceRepository
+    public class ServiceRepository : IServiceRepository
     {
         private readonly IMongoCollection<Service> _service;
 

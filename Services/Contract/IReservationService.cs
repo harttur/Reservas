@@ -7,7 +7,7 @@ namespace Reservas.Services.Contract
         Task<List<ReservationDto>> GetAllReservationAsync();
         Task<ReservationDto> GetReservationByIdAsync(string id_reservation);
         Task CreateReservationAsync(ReservationDto reservation);
-        Task UpdateReservationAsunc(string id_reservation, ReservationDto reservationDto);
+        Task UpdateReservationAsync(string id_reservation, ReservationDto reservationDto);
         Task DeleteReservationAsync(string id_reservation);
 
     }

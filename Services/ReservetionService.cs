@@ -6,7 +6,7 @@ using Reservas.Services.Contract;
 
 namespace Reservas.Services
 {
-    public class ReservetionService
+    public class ReservetionService : IReservationService
     
     {
         private readonly IReservationRepository _reservationRepository;

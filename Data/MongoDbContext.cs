@@ -15,6 +15,6 @@ namespace Reservas.Data
 
         public IMongoCollection<User> Users => _database.GetCollection<User>("User");
         public IMongoCollection<Service> Services => _database.GetCollection<Service>("Service");
-        public IMongoCollection<Reservetion> Reservetions => _database.GetCollection<Reservetion>("Reservetion");
+        public IMongoCollection<Reservation> Reservations => _database.GetCollection<Reservation>("Reservation");
     }
 }

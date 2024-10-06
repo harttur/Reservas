@@ -2,10 +2,11 @@
 using Reservas.Mappers;
 using Reservas.Models;
 using Reservas.Repository.Contract;
+using Reservas.Services.Contract;
 
 namespace Reservas.Services
 {
-    public class ServiceServices
+    public class ServiceServices : IServiceService
     {
         private readonly IServiceRepository _serviceRepository;
 
@@ -30,13 +31,13 @@ namespace Reservas.Services
             await _serviceRepository.DeleteAsync(id_Service);
         }
 
-        public async Task<List<ServiceDto>> GetAllServiceAsync()
+        public async Task<List<ServiceDto>> GetAllServicesAsync()
         {
             var service = await _serviceRepository.GetAllAsync();
             return ServiceMapper.ToDtoList(service);
         }
 
-        public async Task<ServiceDto> GetUserByIdAsync(string id_Service)
+        public async Task<ServiceDto> GetServiceByIdAsync(string id_Service)
         {
             var service = await _serviceRepository.GetByIdAsync(id_Service);
             if (service == null)
