@@ -11,7 +11,6 @@ namespace Reservas.Mappers
 
             return new UserDto
             {
-                Id_user = user.Id_user,
                 Name = user.Name,
                 password = user.password
             };
@@ -24,7 +23,6 @@ namespace Reservas.Mappers
 
             return new User
             {
-                Id_user = userDto.Id_user,
                 Name = userDto.Name,
                 password = userDto.password
             };

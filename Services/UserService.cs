@@ -15,10 +15,12 @@ namespace Reservas.Services
             _userRepository = userRepository;
         }
 
-        public async Task CreateUserAsync(UserDto userDto)
+        public async Task<Models.User> CreateUserAsync(UserDto userDto)
         {
             var user = UserMapper.ToEntity(userDto);
             await _userRepository.CreateAsync(user);
+
+            return user;
         }
 
         public async Task DeleteUserAsync(string id_user)

@@ -7,10 +7,9 @@ namespace Reservas.Data
     {
         private readonly IMongoDatabase _database;
 
-        public MongoDbContext(string connectionString, string databaseName)
+        public MongoDbContext(IMongoClient mongoClient, string databaseName)
         {
-            var client = new MongoClient(connectionString);
-            _database = client.GetDatabase(databaseName);
+            _database = mongoClient.GetDatabase(databaseName);
         }
 
         public IMongoCollection<User> Users => _database.GetCollection<User>("User");

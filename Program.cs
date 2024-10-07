@@ -1,5 +1,6 @@
 using MongoDB.Driver;
 using Reservas.Configurations;
+using Reservas.Data;
 using Reservas.Repository;
 using Reservas.Repository.Contract;
 using Reservas.Services;
@@ -14,9 +15,8 @@ builder.Services.AddSingleton<IMongoClient, MongoClient>(sp => new MongoClient(m
 builder.Services.AddScoped(sp =>
 {
     var client = sp.GetRequiredService<IMongoClient>();
-    return client.GetDatabase(mongoDataBaseName);
+    return new MongoDbContext(client, mongoDataBaseName);
 });
-
 
 // Add services to the container.
 builder.Services.AddScoped<IUserRepository, UserRepository>();

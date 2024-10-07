@@ -4,6 +4,7 @@ using Reservas.Data;
 using Reservas.Models;
 using Reservas.Repository.Contract;
 using System.Collections.Generic;
+using static MongoDB.Driver.WriteConcern;
 
 namespace Reservas.Repository
 {
@@ -34,7 +35,12 @@ namespace Reservas.Repository
 
         public async Task UpdateAsync(string id_user, User user)
         {
-            await _users.ReplaceOneAsync(user => user.Id_user == id_user, user);
+            var filter = Builders<User>.Filter.Eq(user => user.Id_user, id_user);
+            var update = Builders<User>.Update
+                .Set(newUser => newUser.Name, user.Name)
+                .Set(newUser => newUser.password, user.password);
+
+            await _users.UpdateOneAsync(filter, update);
         }
 
         public async Task DeleteAsync(string id_user)

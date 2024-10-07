@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Reservas.Dtos;
+using Reservas.Models;
 using Reservas.Services.Contract;
 using ZstdSharp.Unsafe;
 
@@ -35,21 +36,23 @@ namespace Reservas.Controllers
         }
  
         [HttpPost]
-        public async Task<ActionResult> CreateUser(UserDto userDto)
-        { 
-            await _userService.CreateUserAsync(userDto); 
-            return CreatedAtAction(nameof(GetUserById),new { id_user = userDto.Id_user}, userDto);
+        public async Task<ActionResult> CreateUser([FromBody] UserDto userDto)
+        {
+
+            User user = await _userService.CreateUserAsync(userDto); 
+
+            return CreatedAtAction(nameof(GetUserById),new { id_user = user.Id_user}, userDto);
         }
 
-        [HttpPut]
-        public async Task<ActionResult> UpdateUser(string id_user, UserDto userdto)
+        [HttpPut("{id_user}")]
+        public async Task<ActionResult> UpdateUser(string id_user, UserDto userDto)
         {
-            await _userService.UpdateUserAsync(id_user, userdto);
+            await _userService.UpdateUserAsync(id_user, userDto);
             return NoContent(); 
 
         }
 
-        [HttpDelete]
+        [HttpDelete("{id_user}")]
         public async Task<ActionResult> DeleteUser(string id_user)
         { 
             await _userService.DeleteUserAsync(id_user);
