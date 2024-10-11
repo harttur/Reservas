@@ -1,4 +1,5 @@
 ﻿using Reservas.Dtos;
+using Reservas.Models;
 
 namespace Reservas.Services.Contract
 {
@@ -6,8 +7,8 @@ namespace Reservas.Services.Contract
     {
         Task<List<ServiceDto>> GetAllServicesAsync();
         Task<ServiceDto> GetServiceByIdAsync(string id_service);
-        Task CreateServiceAsync(ServiceDto Service);
-        Task UpdateServiceAsync(string Id_Service, ServiceDto ServicesDto);
+        Task<Service> CreateServiceAsync(ServiceDto serviceDto);
+        Task<ServiceDto> UpdateServiceAsync(string Id_Service, ServiceDto ServicesDto);
         Task DeleteServiceAsync(string Id_Service);
     }
 }

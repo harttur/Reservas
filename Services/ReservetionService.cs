@@ -7,7 +7,8 @@ using Reservas.Services.Contract;
 namespace Reservas.Services
 {
     public class ReservetionService : IReservationService
-    
+
+
     {
         private readonly IReservationRepository _reservationRepository;
 
@@ -16,10 +17,12 @@ namespace Reservas.Services
             _reservationRepository = reservationRepository;
         }
 
-        public async Task CreateReservationAsync(ReservationDto reservationDto)
+        public async Task<Reservation> CreateReservationAsync(ReservationDto reservationDto)
         {
             var reservation = ReservationMapper.ToEntity(reservationDto);
             await _reservationRepository.CreateAsync(reservation);
+
+            return reservation;
         }
 
         public async Task DeleteReservationAsync(string id_reservation)

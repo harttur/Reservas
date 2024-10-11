@@ -1,6 +1,4 @@
-﻿
-
-using Reservas.Dtos;
+﻿using Reservas.Dtos;
 
 namespace Reservas.Services.Contract
 {
@@ -13,3 +11,5 @@ namespace Reservas.Services.Contract
         Task DeleteUserAsync(string id_user);   
     }
 }
+
+
