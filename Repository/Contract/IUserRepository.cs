@@ -9,5 +9,6 @@ namespace Reservas.Repository.Contract
         Task CreateAsync(User entity);
         Task UpdateAsync(string id_user, User entity);
         Task DeleteAsync(string id_user);
+        User GetUserByUsername(string username);
     }
 }

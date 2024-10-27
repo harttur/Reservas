@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
+using MongoDB.Driver.Core.Configuration;
 using Reservas.Data;
 using Reservas.Models;
 using Reservas.Repository.Contract;
@@ -15,6 +16,13 @@ namespace Reservas.Repository
         public UserRepository(MongoDbContext context)
         {
             _users = context.Users;
+           
+        }
+        public User GetUserByUsername(string username)
+        {
+            // Busca o usuário pelo nome de usuário, ignorando maiúsculas e minúsculas
+            return _users.AsQueryable()
+                .FirstOrDefault(u => u.Name.Equals(username, StringComparison.OrdinalIgnoreCase));
         }
 
         public async Task<List<User>> GetAllAsync()
@@ -46,6 +54,11 @@ namespace Reservas.Repository
         public async Task DeleteAsync(string id_user)
         {
             await _users.DeleteOneAsync(user => id_user == user.Id_user);
+        }
+
+        User IUserRepository.GetUserByUsername(string username)
+        {
+            throw new NotImplementedException();
         }
     }
 }

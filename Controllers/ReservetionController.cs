@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Reservas.Dtos;
 using Reservas.Models;
@@ -6,7 +7,7 @@ using Reservas.Services.Contract;
 
 namespace Reservas.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/reservation")]
     [ApiController]
     public class ReservationController : ControllerBase
     {
@@ -15,6 +16,8 @@ namespace Reservas.Controllers
         {
             _reservationService = reservationService;
         }
+
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<List<ReservationDto>>> GetAllUsers()
         {
@@ -22,6 +25,7 @@ namespace Reservas.Controllers
             return reservations;
         }
 
+        [Authorize]
         [HttpGet("{Id_reservation}")]
         public async Task<ActionResult<ReservationDto>> GetReservetionById(string Id_reservation)
         {
@@ -35,6 +39,7 @@ namespace Reservas.Controllers
             return reservation;
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult> CreateReservation([FromBody] ReservationDto reservationDto)
         {
@@ -44,6 +49,7 @@ namespace Reservas.Controllers
             return CreatedAtAction(nameof(GetReservetionById), new { Id_reservation = reservation.Id_reservation }, reservationDto);
         }
 
+        [Authorize]
         [HttpPut("{Id_reservation}")]
         public async Task<ActionResult> UpdateReservation(string Id_reservation, ReservationDto reservationDto)
         {
@@ -52,6 +58,7 @@ namespace Reservas.Controllers
 
         }
 
+        [Authorize]
         [HttpDelete("{Id_reservation}")]
         public async Task<ActionResult> DeleteReservation(string Id_reservation)
         {

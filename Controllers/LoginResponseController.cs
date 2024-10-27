@@ -21,6 +21,11 @@ namespace Reservas.Controllers
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginRequestDto request)
         {
+            if (request == null)
+            {
+                return BadRequest("Dados de login não podem ser nulos.");
+            }
+
             var user = _userService.Authenticate(request.name, request.password);
             if (user == null)
             {
@@ -30,7 +35,7 @@ namespace Reservas.Controllers
             var token = _userService.GenerateJwtToken(user);
             var expiration = DateTime.UtcNow.AddMinutes(180);
 
-                var loginResponse = new LoginResponse(token, expiration, user.Name);
+                var loginResponse = new LoginResponse(token, expiration, user);
 
                 return Ok(loginResponse);
             

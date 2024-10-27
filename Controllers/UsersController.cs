@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Reservas.Dtos;
 using Reservas.Models;
 using Reservas.Services.Contract;
@@ -15,6 +16,7 @@ namespace Reservas.Controllers
         {
             _userService = userService;
         }
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<List<UserDto>>> GetAllUsers()
         {
@@ -22,6 +24,7 @@ namespace Reservas.Controllers
             return users;
         }
 
+        [Authorize]
         [HttpGet("{id_user}")]
         public async Task<ActionResult<UserDto>> GetUserById(string id_user)
         { 
@@ -44,6 +47,7 @@ namespace Reservas.Controllers
             return CreatedAtAction(nameof(GetUserById),new { id_user = user.Id_user}, userDto);
         }
 
+        [Authorize]
         [HttpPut("{id_user}")]
         public async Task<ActionResult> UpdateUser(string id_user, UserDto userDto)
         {
@@ -51,7 +55,7 @@ namespace Reservas.Controllers
             return NoContent(); 
 
         }
-
+        [Authorize]
         [HttpDelete("{id_user}")]
         public async Task<ActionResult> DeleteUser(string id_user)
         { 

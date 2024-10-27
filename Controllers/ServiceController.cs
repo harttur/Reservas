@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using Reservas.Dtos;
 using Reservas.Models;
@@ -7,7 +8,7 @@ using Reservas.Services.Contract;
 
 namespace Reservas.Controllers
 {
-    [Route("api/controller")]
+    [Route("api/service")]
     [ApiController]
     public class ServiceController : ControllerBase
     {
@@ -18,6 +19,7 @@ namespace Reservas.Controllers
             _serviceService = servicesService;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<List<ServiceDto>>> GetAllServices()
         {
@@ -36,7 +38,7 @@ namespace Reservas.Controllers
                                    serviceDto);
         }
 
-
+        [Authorize]
         [HttpGet("{Id_Service}")]
         public async Task<ActionResult<ServiceDto>> GetServiceById(string id_service)
         {
@@ -57,6 +59,7 @@ namespace Reservas.Controllers
             return true; // ou false se não for bem-sucedido
         }*/
 
+        [Authorize]
         [HttpPut("{id_service}")]
         public async Task<IActionResult> UpdateServiceAsync(string id_service, ServiceDto serviceDto)
         {
@@ -76,7 +79,7 @@ namespace Reservas.Controllers
         }
 
 
-
+        [Authorize]
         [HttpDelete("{id_servie}")]
         public async Task<ActionResult> DeleteService(string Id_service)
         {
