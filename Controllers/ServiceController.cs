@@ -8,84 +8,85 @@ using Reservas.Services.Contract;
 
 namespace Reservas.Controllers
 {
-    [Route("api/service")]
-    [ApiController]
-    public class ServiceController : ControllerBase
-    {
-        private readonly IServiceService _serviceService;
+	[Route("api/service")]
+	[ApiController]
+	public class ServiceController : ControllerBase
+	{
+		private readonly IServiceService _serviceService;
 
-        public ServiceController(IServiceService servicesService)
-        {
-            _serviceService = servicesService;
-        }
+		public ServiceController(IServiceService serviceService) // Corrigido nome do parâmetro
+		{
+			_serviceService = serviceService;
+		}
 
-        [Authorize]
-        [HttpGet]
-        public async Task<ActionResult<List<ServiceDto>>> GetAllServices()
-        {
-            var service = await _serviceService.GetAllServicesAsync();
-            return service;
-        }
+		[Authorize]
+		[HttpGet]
+		public async Task<ActionResult<List<ServiceDto>>> GetAllServices()
+		{
+			var services = await _serviceService.GetAllServicesAsync(); // Corrigido nome da variável
+			return Ok(services); // Retorna status 200 com os serviços
+		}
 
-        [HttpPost]
-        public async Task<ActionResult> CreateService([FromBody] ServiceDto serviceDto)
-        {
+		[HttpPost]
+		public async Task<ActionResult> CreateService([FromBody] ServiceDto serviceDto)
+		{
+			if (serviceDto == null)
+			{
+				return BadRequest("Os dados do serviço não podem ser nulos.");
+			}
 
-            Service service = await _serviceService.CreateServiceAsync(serviceDto);
+			Service service = await _serviceService.CreateServiceAsync(serviceDto);
 
-            return CreatedAtAction(nameof(GetServiceById),
-                                   new { id_service = service.Id_Service},
-                                   serviceDto);
-        }
+			return CreatedAtAction(nameof(GetServiceById),
+								   new { id_service = service.Id_Service },
+								   serviceDto); // Retorna 201 com a URL do novo recurso
+		}
 
-        [Authorize]
-        [HttpGet("{Id_Service}")]
-        public async Task<ActionResult<ServiceDto>> GetServiceById(string id_service)
-        {
-            var service = await _serviceService.GetServiceByIdAsync(id_service);
+		[Authorize]
+		[HttpGet("{id_service}")]
+		public async Task<ActionResult<ServiceDto>> GetServiceById(string id_service)
+		{
+			var service = await _serviceService.GetServiceByIdAsync(id_service);
 
-            if (service == null)
-            {
-                return NotFound(); 
-            }
+			if (service == null)
+			{
+				return NotFound($"Serviço com ID {id_service} não encontrado.");
+			}
 
-            return service; 
-        }
+			return Ok(service); // Retorna o serviço encontrado
+		}
 
-        /*[HttpPut("{id_servie}")]
-        public async Task<bool> UpdateServiceAsync(string id_service, ServiceDto serviceDto)
-        {
-            // Lógica de atualização
-            return true; // ou false se não for bem-sucedido
-        }*/
+		[Authorize]
+		[HttpPut("{id_service}")]
+		public async Task<IActionResult> UpdateServiceAsync(string id_service, [FromBody] ServiceDto serviceDto)
+		{
+			if (serviceDto == null)
+			{
+				return BadRequest("Os dados do serviço não podem ser nulos.");
+			}
 
-        [Authorize]
-        [HttpPut("{id_service}")]
-        public async Task<IActionResult> UpdateServiceAsync(string id_service, ServiceDto serviceDto)
-        {
-            if (serviceDto == null)
-            {
-                return BadRequest("Os dados do serviço não podem ser nulos.");
-            }
+			var updatedService = await _serviceService.UpdateServiceAsync(id_service, serviceDto);
 
-            var updatedService = await _serviceService.UpdateServiceAsync(id_service, serviceDto);
+			if (updatedService == null)
+			{
+				return NotFound($"Serviço com ID {id_service} não encontrado.");
+			}
 
-            if (updatedService == null)
-            {
-                return NotFound($"Serviço com ID {id_service} não encontrado.");
-            }
+			return Ok(updatedService); // Retorna o serviço atualizado com status 200
+		}
 
-            return Ok(updatedService);
-        }
+		[Authorize]
+		[HttpDelete("{id_service}")]
+		public async Task<ActionResult> DeleteService(string id_service)
+		{
+			var service = await _serviceService.GetServiceByIdAsync(id_service);
+			if (service == null)
+			{
+				return NotFound($"Serviço com ID {id_service} não encontrado.");
+			}
 
-
-        [Authorize]
-        [HttpDelete("{id_servie}")]
-        public async Task<ActionResult> DeleteService(string Id_service)
-        {
-            await _serviceService.DeleteServiceAsync(Id_service);
-            return NoContent();
-        }
-
-    }
+			await _serviceService.DeleteServiceAsync(id_service);
+			return NoContent(); // Retorna 204 quando a exclusão for bem-sucedida
+		}
+	}
 }

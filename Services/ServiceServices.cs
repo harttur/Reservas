@@ -3,67 +3,97 @@ using Reservas.Mappers;
 using Reservas.Models;
 using Reservas.Repository.Contract;
 using Reservas.Services.Contract;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
 
 namespace Reservas.Services
 {
-    public class ServiceService : IServiceService
-    {
-        private readonly IServiceRepository _serviceRepository;
+	public class ServiceService : IServiceService
+	{
+		private readonly IServiceRepository _serviceRepository;
+		private readonly ILogger<ServiceService> _logger;
 
-        public ServiceService(IServiceRepository serviceRepository)
-        {
-            _serviceRepository = serviceRepository;
-        }
+		// Construtor com injeção de dependências
+		public ServiceService(IServiceRepository serviceRepository, ILogger<ServiceService> logger)
+		{
+			_serviceRepository = serviceRepository;
+			_logger = logger;
+		}
 
-        public async Task<Service> CreateServiceAsync(ServiceDto serviceDto)
-        {
-            var service = ServiceMapper.ToEntity(serviceDto);
-            await _serviceRepository.CreateAsync(service);
+		// Método privado para buscar o serviço ou lançar exceção caso não encontrado
+		private async Task<Service> GetServiceOrThrow(string id_Service)
+		{
+			var service = await _serviceRepository.GetByIdAsync(id_Service);
+			if (service == null)
+			{
+				throw new KeyNotFoundException($"Service with ID {id_Service} not found.");
+			}
+			return service;
+		}
 
-            return service;
-        }
+		// Método para criar um novo serviço
+		public async Task<Service> CreateServiceAsync(ServiceDto serviceDto)
+		{
+			if (serviceDto == null)
+			{
+				throw new ArgumentNullException(nameof(serviceDto), "Service DTO cannot be null.");
+			}
 
-        public async Task DeleteServiceAsync(string id_Service)
-        {
-            var service = await _serviceRepository.GetByIdAsync(id_Service);
-            if (service == null)
-            {
-                return;
-            }
-            await _serviceRepository.DeleteAsync(id_Service);
-        }
+			var service = ServiceMapper.ToEntity(serviceDto);
+			await _serviceRepository.CreateAsync(service);
 
-        public async Task<List<ServiceDto>> GetAllServicesAsync()
-        {
-            var service = await _serviceRepository.GetAllAsync();
-            return ServiceMapper.ToDtoList(service);
-        }
+			_logger.LogInformation($"Service created with ID {service.Id_Service}.");
 
-        public async Task<ServiceDto?> GetServiceByIdAsync(string id_Service)
-        {
-            var service = await _serviceRepository.GetByIdAsync(id_Service);
-            if (service == null)
-            {
-                return null;
-            }
+			return service;
+		}
 
-            return ServiceMapper.ToDto(service);
+		// Método para deletar um serviço
+		public async Task DeleteServiceAsync(string id_Service)
+		{
+			var service = await GetServiceOrThrow(id_Service);
 
-        }
+			await _serviceRepository.DeleteAsync(id_Service);
+			_logger.LogInformation($"Service with ID {id_Service} has been deleted.");
+		}
 
-        public async Task<ServiceDto> UpdateServiceAsync(string id_Service, ServiceDto serviceDto)
-        {
-            var service = await _serviceRepository.GetByIdAsync(id_Service);
-            if (service == null)
-            {
-                return null;
-            }
+		// Método para obter todos os serviços
+		public async Task<List<ServiceDto>> GetAllServicesAsync()
+		{
+			var services = await _serviceRepository.GetAllAsync();
+			_logger.LogInformation($"Fetched {services.Count} services.");
 
-            var updatedService = ServiceMapper.ToEntity(serviceDto);
-            await _serviceRepository.UpdateAsync(id_Service, updatedService);
+			return ServiceMapper.ToDtoList(services);
+		}
 
-            return serviceDto;
-        }
-    }
+		// Método para buscar um serviço por ID
+		public async Task<ServiceDto?> GetServiceByIdAsync(string id_Service)
+		{
+			var service = await _serviceRepository.GetByIdAsync(id_Service);
+			if (service == null)
+			{
+				return null; // Retorna null se não encontrar
+			}
+
+			return ServiceMapper.ToDto(service);
+		}
+
+		// Método para atualizar um serviço
+		public async Task<ServiceDto> UpdateServiceAsync(string id_Service, ServiceDto serviceDto)
+		{
+			if (serviceDto == null)
+			{
+				throw new ArgumentNullException(nameof(serviceDto), "Service DTO cannot be null.");
+			}
+
+			var service = await GetServiceOrThrow(id_Service);
+
+			var updatedService = ServiceMapper.ToEntity(serviceDto);
+			await _serviceRepository.UpdateAsync(id_Service, updatedService);
+
+			_logger.LogInformation($"Service with ID {id_Service} has been updated.");
+
+			return serviceDto;
+		}
+	}
 }
-

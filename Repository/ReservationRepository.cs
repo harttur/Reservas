@@ -2,42 +2,62 @@
 using Reservas.Data;
 using Reservas.Models;
 using Reservas.Repository.Contract;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Reservas.Repository
 {
-    public class ReservationRepository : IReservationRepository
-    {
-        private readonly IMongoCollection<Reservation> _reservation;
+	public class ReservationRepository : IReservationRepository
+	{
+		private readonly IMongoCollection<Reservation> _reservation;
 
-        public ReservationRepository(MongoDbContext context)
-        {
-            _reservation = context.Reservations;
-        }
+		public ReservationRepository(MongoDbContext context)
+		{
+			_reservation = context.Reservations;
+		}
 
-        public async Task<List<Reservation>> GetAllAsync()
-        {
-            return await _reservation.Find(reservetion => true).ToListAsync();
-        }
+		/// <summary>
+		/// Recupera todas as reservas.
+		/// </summary>
+		public async Task<List<Reservation>> GetAllAsync(CancellationToken cancellationToken = default)
+		{
+			return await _reservation.Find(Builders<Reservation>.Filter.Empty)
+									  .ToListAsync(cancellationToken);
+		}
 
-        public async Task<Reservation> GetByIdAsync(string id_reservetion)
-        {
-            return await _reservation.Find<Reservation>(reservetion => reservetion.Id_reservation == id_reservetion).FirstOrDefaultAsync();
-        }
+		/// <summary>
+		/// Recupera uma reserva pelo ID.
+		/// </summary>
+		public async Task<Reservation> GetByIdAsync(string id_reservation, CancellationToken cancellationToken = default)
+		{
+			var filter = Builders<Reservation>.Filter.Eq(r => r.Id_reservation, id_reservation);
+			return await _reservation.Find(filter).FirstOrDefaultAsync(cancellationToken);
+		}
 
-        public async Task CreateAsync(Reservation reservetion)
+		/// <summary>
+		/// Cria uma nova reserva.
+		/// </summary>
+		public async Task CreateAsync(Reservation reservation, CancellationToken cancellationToken = default)
+		{
+			await _reservation.InsertOneAsync(reservation, cancellationToken: cancellationToken);
+		}
 
-        {
-            await _reservation.InsertOneAsync(reservetion);
-        }
+		/// <summary>
+		/// Atualiza uma reserva existente.
+		/// </summary>
+		public async Task UpdateAsync(string id_reservation, Reservation reservation, CancellationToken cancellationToken = default)
+		{
+			var filter = Builders<Reservation>.Filter.Eq(r => r.Id_reservation, id_reservation);
+			await _reservation.ReplaceOneAsync(filter, reservation, cancellationToken: cancellationToken);
+		}
 
-        public async Task UpdateAsync(string id_reservetion, Reservation reservetion)
-        {
-            await _reservation.ReplaceOneAsync(reservetion => reservetion.Id_reservation == id_reservetion, reservetion);
-        }
-
-        public async Task DeleteAsync(string id_reservetion)
-        {
-            await _reservation.DeleteOneAsync(reservetion => id_reservetion == reservetion.Id_reservation);
-        }
-    }
+		/// <summary>
+		/// Deleta uma reserva pelo ID.
+		/// </summary>
+		public async Task DeleteAsync(string id_reservation, CancellationToken cancellationToken = default)
+		{
+			var filter = Builders<Reservation>.Filter.Eq(r => r.Id_reservation, id_reservation);
+			await _reservation.DeleteOneAsync(filter, cancellationToken);
+		}
+	}
 }

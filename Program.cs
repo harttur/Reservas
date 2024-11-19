@@ -11,8 +11,31 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Adiciona a configuração a partir de appsettings.json
-builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+// Mapeia as configurações do JWT no appsettings.json para a classe JwtConfiguration
+var jwtSettings = builder.Configuration.GetSection("JwtConfiguration").Get<JwtConfiguration>();
+builder.Services.AddSingleton(jwtSettings);  // Corrigido o erro de digitação
+
+// Configura autenticação JWT
+builder.Services.AddAuthentication(options =>
+{
+	options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+	options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+	options.TokenValidationParameters = new TokenValidationParameters
+	{
+		ValidateIssuer = true,
+		ValidateAudience = true,
+		ValidateLifetime = true,
+		ValidateIssuerSigningKey = true,
+		ValidIssuer = jwtSettings.Issuer,
+		ValidAudience = jwtSettings.Audience,
+		IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret))
+	};
+});
+
+builder.Services.AddAuthorization();
 
 // Configuração da string de conexão do MongoDB
 var mongoConnectionString = builder.Configuration.GetConnectionString("MongoDbConnection");
@@ -22,17 +45,17 @@ var mongoDataBaseName = builder.Configuration["MongoDbSettings:DatabaseName"];
 builder.Services.AddSingleton<IMongoClient, MongoClient>(sp => new MongoClient(mongoConnectionString));
 builder.Services.AddScoped(sp =>
 {
-    var client = sp.GetRequiredService<IMongoClient>();
-    return new MongoDbContext(client, mongoDataBaseName);
+	var client = sp.GetRequiredService<IMongoClient>();
+	return new MongoDbContext(client, mongoDataBaseName);
 });
 
 // Registra IUserRepository e IUserService
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>(provider =>
 {
-    var userRepository = provider.GetRequiredService<IUserRepository>();
-    var jwtSecret = builder.Configuration["JwtSettings:Secret"];
-    return new UserService(userRepository, jwtSecret);
+	var userRepository = provider.GetRequiredService<IUserRepository>();
+	var jwtSecret = jwtSettings.Secret; // Obtemos o segredo diretamente da configuração já injetada
+	return new UserService(userRepository, jwtSecret, jwtSettings.Issuer, jwtSettings.Audience);
 });
 
 // Adiciona outros repositórios e serviços
@@ -44,30 +67,6 @@ builder.Services.AddScoped<IServiceService, ServiceService>();
 // Adiciona os controladores
 builder.Services.AddControllers();
 
-// Configuração de JWT
-builder.Services.Configure<JwtConfiguration>(builder.Configuration.GetSection("Jwt"));
-
-// Adiciona autenticação JWT
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    var jwtConfig = builder.Configuration.GetSection("Jwt").Get<JwtConfiguration>();
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtConfig.Issuer,
-        ValidAudience = jwtConfig.Audience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig.Secret))
-    };
-});
-
 // Configuração do Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -77,8 +76,8 @@ var app = builder.Build();
 // Configuração do pipeline de requisições HTTP
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+	app.UseSwagger();
+	app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
@@ -86,4 +85,5 @@ app.UseAuthentication(); // Adiciona autenticação
 app.UseAuthorization();
 
 app.MapControllers();
+
 app.Run();

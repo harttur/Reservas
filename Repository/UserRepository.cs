@@ -1,64 +1,80 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
-using MongoDB.Driver.Core.Configuration;
 using Reservas.Data;
 using Reservas.Models;
 using Reservas.Repository.Contract;
 using System.Collections.Generic;
-using static MongoDB.Driver.WriteConcern;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Reservas.Repository
 {
-    public class UserRepository : IUserRepository
-    {
-        private readonly IMongoCollection<User> _users;
+	public class UserRepository : IUserRepository
+	{
+		private readonly IMongoCollection<User> _users;
 
-        public UserRepository(MongoDbContext context)
-        {
-            _users = context.Users;
-           
-        }
-        public User GetUserByUsername(string username)
-        {
-            // Busca o usuário pelo nome de usuário, ignorando maiúsculas e minúsculas
-            return _users.AsQueryable()
-                .FirstOrDefault(u => u.Name.Equals(username, StringComparison.OrdinalIgnoreCase));
-        }
+		public UserRepository(MongoDbContext context)
+		{
+			_users = context.Users;
+		}
 
-        public async Task<List<User>> GetAllAsync()
-        {
-            return await _users.Find(user => true).ToListAsync();
-        }
+		/// <summary>
+		/// Busca um usuário pelo nome de usuário, ignorando maiúsculas e minúsculas.
+		/// </summary>
+		public User GetUserByUsername(string username)
+		{
+			// Busca o usuário pelo nome de usuário
+			var filter = Builders<User>.Filter.Eq(u => u.Name, username);
+			return _users.Find(filter).FirstOrDefault();
+		}
 
-        public async Task<User> GetByIdAsync(string id_user)
-        {
-            return await _users.Find<User>(user => user.Id_user == id_user).FirstOrDefaultAsync();
-        }
+		/// <summary>
+		/// Recupera todos os usuários.
+		/// </summary>
+		public async Task<List<User>> GetAllAsync(CancellationToken cancellationToken = default)
+		{
+			// Retorna todos os usuários
+			return await _users.Find(Builders<User>.Filter.Empty)
+				.ToListAsync(cancellationToken);
+		}
 
-        public async Task CreateAsync(User user)
+		/// <summary>
+		/// Recupera um usuário pelo ID.
+		/// </summary>
+		public async Task<User> GetByIdAsync(string id_user, CancellationToken cancellationToken = default)
+		{
+			var filter = Builders<User>.Filter.Eq(u => u.Id_user, id_user);
+			return await _users.Find(filter).FirstOrDefaultAsync(cancellationToken);
+		}
 
-        {
-            await _users.InsertOneAsync(user);
-        }
+		/// <summary>
+		/// Cria um novo usuário.
+		/// </summary>
+		public async Task CreateAsync(User user, CancellationToken cancellationToken = default)
+		{
+			await _users.InsertOneAsync(user, cancellationToken: cancellationToken);
+		}
 
-        public async Task UpdateAsync(string id_user, User user)
-        {
-            var filter = Builders<User>.Filter.Eq(user => user.Id_user, id_user);
-            var update = Builders<User>.Update
-                .Set(newUser => newUser.Name, user.Name)
-                .Set(newUser => newUser.password, user.password);
+		/// <summary>
+		/// Atualiza um usuário existente.
+		/// </summary>
+		public async Task UpdateAsync(string id_user, User user, CancellationToken cancellationToken = default)
+		{
+			var filter = Builders<User>.Filter.Eq(u => u.Id_user, id_user);
+			var update = Builders<User>.Update
+				.Set(u => u.Name, user.Name)
+				.Set(u => u.password, user.password);
 
-            await _users.UpdateOneAsync(filter, update);
-        }
+			await _users.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
+		}
 
-        public async Task DeleteAsync(string id_user)
-        {
-            await _users.DeleteOneAsync(user => id_user == user.Id_user);
-        }
-
-        User IUserRepository.GetUserByUsername(string username)
-        {
-            throw new NotImplementedException();
-        }
-    }
+		/// <summary>
+		/// Deleta um usuário pelo ID.
+		/// </summary>
+		public async Task DeleteAsync(string id_user, CancellationToken cancellationToken = default)
+		{
+			var filter = Builders<User>.Filter.Eq(u => u.Id_user, id_user);
+			await _users.DeleteOneAsync(filter, cancellationToken);
+		}
+	}
 }

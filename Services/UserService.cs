@@ -8,130 +8,119 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using BCrypt.Net;
 
 namespace Reservas.Services
 {
-    public class UserService : IUserService
-    {
-        private readonly IUserRepository _userRepository;
-        private readonly string _jwtSecret;
+	public class UserService : IUserService
+	{
+		private readonly IUserRepository _userRepository;
+		private readonly string _jwtSecret;
+		private readonly string _jwtIssuer;
+		private readonly string _jwtAudience;
 
-        public UserService(IUserRepository userRepository, string jwtSecret)
-        {
-            _userRepository = userRepository;
-            _jwtSecret = jwtSecret;
-        }
+		public UserService(IUserRepository userRepository, string jwtSecret, string jwtIssuer, string jwtAudience)
+		{
+			_userRepository = userRepository;
+			_jwtSecret = jwtSecret;
+			_jwtIssuer = jwtIssuer;
+			_jwtAudience = jwtAudience;
+		}
 
-        public async Task<Models.User> CreateUserAsync(UserDto userDto)
-        {
-            var user = UserMapper.ToEntity(userDto);
-            await _userRepository.CreateAsync(user);
+		public async Task<Models.User> CreateUserAsync(UserDto userDto)
+		{
+			// Hash da senha antes de salvar
+			userDto.Password = HashPassword(userDto.Password);
 
-            return user;
-        }
+			var user = UserMapper.ToEntity(userDto);
+			await _userRepository.CreateAsync(user);
 
-        public async Task DeleteUserAsync(string id_user)
-        {
-            var user = await _userRepository.GetByIdAsync(id_user);
-            if (user == null)
-            {
-                return;
-            }
-            await _userRepository.DeleteAsync(id_user);
-        }
+			return user;
+		}
 
-        public async Task<List<UserDto>> GetAllUsersAsync()
-        {
-            var user = await _userRepository.GetAllAsync();
-            return UserMapper.ToDtoList(user);  
-        }
+		public async Task DeleteUserAsync(string id_user)
+		{
+			var user = await _userRepository.GetByIdAsync(id_user);
+			if (user == null)
+			{
+				return;
+			}
+			await _userRepository.DeleteAsync(id_user);
+		}
 
-        public async Task<UserDto> GetUserByIdAsync(string id_user)
-        {
-            var user = await _userRepository.GetByIdAsync(id_user);
-            if (user == null)
-            {
-                return null;
-            }
+		public async Task<List<UserDto>> GetAllUsersAsync()
+		{
+			var user = await _userRepository.GetAllAsync();
+			return UserMapper.ToDtoList(user);
+		}
 
-            return UserMapper.ToDto(user);
+		public async Task<UserDto> GetUserByIdAsync(string id_user)
+		{
+			var user = await _userRepository.GetByIdAsync(id_user);
+			if (user == null)
+			{
+				return null;
+			}
 
-        }
+			return UserMapper.ToDto(user);
+		}
 
-        public async Task UpdateUserAsync(string id_user, UserDto userDto)
-        {
-            var user = await _userRepository.GetByIdAsync(id_user);
-            if (user == null)
-            {
-                return;
-            }
+		public async Task UpdateUserAsync(string id_user, UserDto userDto)
+		{
+			var user = await _userRepository.GetByIdAsync(id_user);
+			if (user == null)
+			{
+				return;
+			}
 
-            var updatedUser = UserMapper.ToEntity(userDto);
-            await _userRepository.UpdateAsync(id_user, updatedUser);
-        }
+			// Hash da senha antes de atualizar
+			userDto.Password = HashPassword(userDto.Password);
 
-        String IUserService.Authenticate(string username, string password)
-        {
-            var user = _userRepository.GetUserByUsername(username);
-            if (user == null || !VerifyPassword(storedPassword: user.password, providedPassword: password))
-            {
-                throw new UnauthorizedAccessException("Usuário ou senha inválidos.");
-            }
-            return GenerateJwtToken(user);
-        }
+			var updatedUser = UserMapper.ToEntity(userDto);
+			await _userRepository.UpdateAsync(id_user, updatedUser);
+		}
 
-        public string GenerateJwtToken(User user)
-        {
-            // Define as reivindicações (claims) do token
-            var claims = new[]
-            {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Name),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
+		public async Task<UserDto> Authenticate(string username, string password)
+		{
+			var user = await _userRepository.GetUserByUsername(username);
+			if (user == null || !VerifyPassword(user.Password, password))
+			{
+				throw new AuthenticationException("Usuário ou senha inválidos.");
+			}
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSecret));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+			return UserMapper.ToDto(user);  // Retorna o usuário mapeado para um DTO
+		}
 
-            var token = new JwtSecurityToken(
-                issuer: null, // Defina o emissor, se necessário
-                audience: null, // Defina o público, se necessário
-                claims: claims,
-                expires: DateTime.Now.AddMinutes(30), // Defina o tempo de expiração conforme necessário
-                signingCredentials: creds);
+		public string GenerateJwtToken(User user)
+		{
+			var claims = new[]
+			{
+				new Claim(JwtRegisteredClaimNames.Sub, user.Name),
+				new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+			};
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
+			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSecret));
+			var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        private static bool VerifyPassword(string storedPassword, string providedPassword)
-        {
-            // Lógica para verificar se a senha fornecida corresponde à senha armazenada
-            return storedPassword == providedPassword; // Exemplo simplificado
-        }
-        string IUserService.GenerateJwtToken(User user)
-        {
-            throw new NotImplementedException();
-        }
+			var token = new JwtSecurityToken(
+				issuer: _jwtIssuer,
+				audience: _jwtAudience,
+				claims: claims,
+				expires: DateTime.UtcNow.AddMinutes(180),
+				signingCredentials: creds
+			);
 
-        public string GenerateJwtToken(string user)
-        {
-            // Define as reivindicações (claims) do token
-            var claims = new[]
-            {
-            new Claim(JwtRegisteredClaimNames.Sub, user),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
+			return new JwtSecurityTokenHandler().WriteToken(token);
+		}
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSecret));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+		private bool VerifyPassword(string storedPassword, string providedPassword)
+		{
+			return BCrypt.Net.BCrypt.Verify(providedPassword, storedPassword); // Verifica com bcrypt
+		}
 
-            var token = new JwtSecurityToken(
-                issuer: null, // Defina o emissor, se necessário
-                audience: null, // Defina o público, se necessário
-                claims: claims,
-                expires: DateTime.Now.AddMinutes(30), // Defina o tempo de expiração conforme necessário
-                signingCredentials: creds);
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-    }
+		private string HashPassword(string password)
+		{
+			return BCrypt.Net.BCrypt.HashPassword(password); // Gera o hash com bcrypt
+		}
+	}
 }

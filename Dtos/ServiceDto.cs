@@ -2,10 +2,16 @@
 
 namespace Reservas.Dtos
 {
-    public class ServiceDto
-    {
-        public string? Id_Service { get; set; }
-        public string? descricao { get; set; }
-    }
-}
+	public class ServiceDto
+	{
+		/// <summary>
+		/// Identificador único do serviço.
+		/// </summary>
+		public string IdService { get; set; }
 
+		/// <summary>
+		/// Descrição do serviço.
+		/// </summary>
+		public string Descricao { get; set; }
+	}
+}

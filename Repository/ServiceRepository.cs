@@ -2,43 +2,62 @@
 using Reservas.Data;
 using Reservas.Models;
 using Reservas.Repository.Contract;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Reservas.Repository
 {
-    public class ServiceRepository : IServiceRepository
-    {
-        private readonly IMongoCollection<Service> _service;
+	public class ServiceRepository : IServiceRepository
+	{
+		private readonly IMongoCollection<Service> _service;
 
-        public ServiceRepository(MongoDbContext context)
-        {
-            _service = context.Services;
-        }
+		public ServiceRepository(MongoDbContext context)
+		{
+			_service = context.Services;
+		}
 
-        public async Task<List<Service>> GetAllAsync()
-        {
-            return await _service.Find(service => true).ToListAsync();
-        }
+		/// <summary>
+		/// Recupera todos os serviços.
+		/// </summary>
+		public async Task<List<Service>> GetAllAsync(CancellationToken cancellationToken = default)
+		{
+			return await _service.Find(Builders<Service>.Filter.Empty)
+								  .ToListAsync(cancellationToken);
+		}
 
-        public async Task<Service> GetByIdAsync(string id_service)
-        {
-            return await _service.Find<Service>(service => service.Id_Service == id_service).FirstOrDefaultAsync();
-        }
+		/// <summary>
+		/// Recupera um serviço pelo ID.
+		/// </summary>
+		public async Task<Service> GetByIdAsync(string id_service, CancellationToken cancellationToken = default)
+		{
+			var filter = Builders<Service>.Filter.Eq(s => s.Id_Service, id_service);
+			return await _service.Find(filter).FirstOrDefaultAsync(cancellationToken);
+		}
 
-        public async Task CreateAsync(Service service)
+		/// <summary>
+		/// Cria um novo serviço.
+		/// </summary>
+		public async Task CreateAsync(Service service, CancellationToken cancellationToken = default)
+		{
+			await _service.InsertOneAsync(service, cancellationToken: cancellationToken);
+		}
 
-        {
-            await _service.InsertOneAsync(service);
-        }
+		/// <summary>
+		/// Atualiza um serviço existente.
+		/// </summary>
+		public async Task UpdateAsync(string id_service, Service service, CancellationToken cancellationToken = default)
+		{
+			var filter = Builders<Service>.Filter.Eq(s => s.Id_Service, id_service);
+			await _service.ReplaceOneAsync(filter, service, cancellationToken: cancellationToken);
+		}
 
-        public async Task UpdateAsync(string id_service, Service service)
-        {
-            await _service.ReplaceOneAsync(service => service.Id_Service == id_service, service);
-        }
-
-        public async Task DeleteAsync(string id_service)
-        {
-            await _service.DeleteOneAsync(service => id_service == service.Id_Service);
-        }
-
-    }
+		/// <summary>
+		/// Deleta um serviço pelo ID.
+		/// </summary>
+		public async Task DeleteAsync(string id_service, CancellationToken cancellationToken = default)
+		{
+			var filter = Builders<Service>.Filter.Eq(s => s.Id_Service, id_service);
+			await _service.DeleteOneAsync(filter, cancellationToken);
+		}
+	}
 }

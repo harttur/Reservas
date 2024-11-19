@@ -1,32 +1,35 @@
-﻿using Reservas.Models;
-using System.Data;
-
-namespace Reservas.Dtos
+﻿[Route("api/[controller]")]
+[ApiController]
+public class LoginResponseController : ControllerBase
 {
-    public class LoginResponseDto
-    {
-        public string Token { get; set; }
-        public DateTime Expiration { get; set; }
-        public string Name { get; set; }
+	private readonly IUserService _userService;
 
-        public LoginResponseDto(string token, DateTime expiration, string name)
-        {
-            Token = token;
-            Expiration = expiration;
-            Name = name;
-        }
+	public LoginResponseController(IUserService userService)
+	{
+		_userService = userService;
+	}
 
-        public static LoginResponseDto FromLoginResponse(LoginResponse response)
-        {
-            return new LoginResponseDto(
-                response.Token,
-                response.Expiration,
-                response.Name
-            );
-        }
+	[HttpPost("login")]
+	public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
+	{
+		if (request == null)
+		{
+			return BadRequest("Dados de login não podem ser nulos.");
+		}
 
+		// Autentica o usuário e retorna o UserDto
+		var user = await _userService.Authenticate(request.Username, request.Password);
+		if (user == null)
+		{
+			return Unauthorized("Usuário ou senha inválidos.");
+		}
 
+		// Gera o token JWT
+		var token = _userService.GenerateJwtToken(user);
+		var expiration = DateTime.UtcNow.AddMinutes(180);
 
-
-    }
+		// Retorna o LoginResponse com token e data de expiração
+		var loginResponse = new LoginResponse(token, expiration, user);
+		return Ok(loginResponse);
+	}
 }

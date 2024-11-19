@@ -18,52 +18,62 @@ namespace Reservas.Controllers
         }
 
         [Authorize]
-        [HttpGet]
-        public async Task<ActionResult<List<ReservationDto>>> GetAllUsers()
-        {
-            var reservations = await _reservationService.GetAllReservationAsync();
-            return reservations;
-        }
+		[HttpGet]
+		public async Task<ActionResult<List<ReservationDto>>> GetAllReservations() // Renomeado para refletir a ação correta
+		{
+			var reservations = await _reservationService.GetAllReservationAsync();
+			return reservations;
+		}
 
-        [Authorize]
-        [HttpGet("{Id_reservation}")]
-        public async Task<ActionResult<ReservationDto>> GetReservetionById(string Id_reservation)
-        {
-            var reservation = await _reservationService.GetReservationByIdAsync(Id_reservation);
+		[Authorize]
+		[HttpGet("{Id_reservation}")]
+		public async Task<ActionResult<ReservationDto>> GetReservationById(string Id_reservation) // Corrigido nome do método e digitação
+		{
+			var reservation = await _reservationService.GetReservationByIdAsync(Id_reservation);
 
-            if (reservation == null)
-            {
-                return NotFound();
-            }
+			if (reservation == null)
+			{
+				return NotFound();
+			}
 
-            return reservation;
-        }
+			return reservation;
+		}
 
-        [Authorize]
-        [HttpPost]
-        public async Task<ActionResult> CreateReservation([FromBody] ReservationDto reservationDto)
-        {
+		[Authorize]
+		[HttpPost]
+		public async Task<ActionResult> CreateReservation([FromBody] ReservationDto reservationDto)
+		{
+			Reservation reservation = await _reservationService.CreateReservationAsync(reservationDto);
 
-            Reservation reservation = await _reservationService.CreateReservationAsync(reservationDto);
+			return CreatedAtAction(nameof(GetReservationById), new { Id_reservation = reservation.Id_reservation }, reservationDto); // Já retorna com 201
+		}
 
-            return CreatedAtAction(nameof(GetReservetionById), new { Id_reservation = reservation.Id_reservation }, reservationDto);
-        }
+		[Authorize]
+		[HttpPut("{Id_reservation}")]
+		public async Task<ActionResult> UpdateReservation(string Id_reservation, ReservationDto reservationDto)
+		{
+			var existingReservation = await _reservationService.GetReservationByIdAsync(Id_reservation);
+			if (existingReservation == null)
+			{
+				return NotFound();
+			}
 
-        [Authorize]
-        [HttpPut("{Id_reservation}")]
-        public async Task<ActionResult> UpdateReservation(string Id_reservation, ReservationDto reservationDto)
-        {
-            await _reservationService.UpdateReservationAsync(Id_reservation, reservationDto);
-            return NoContent();
+			await _reservationService.UpdateReservationAsync(Id_reservation, reservationDto);
+			return NoContent();  // Retorna 204 quando bem-sucedido
+		}
 
-        }
+		[Authorize]
+		[HttpDelete("{Id_reservation}")]
+		public async Task<ActionResult> DeleteReservation(string Id_reservation)
+		{
+			var reservation = await _reservationService.GetReservationByIdAsync(Id_reservation);
+			if (reservation == null)
+			{
+				return NotFound();
+			}
 
-        [Authorize]
-        [HttpDelete("{Id_reservation}")]
-        public async Task<ActionResult> DeleteReservation(string Id_reservation)
-        {
-            await _reservationService.DeleteReservationAsync(Id_reservation);
-            return NoContent();
-        }
-    }
+			await _reservationService.DeleteReservationAsync(Id_reservation);
+			return NoContent();  // Retorna 204 quando bem-sucedido
+		}
+	}
 }

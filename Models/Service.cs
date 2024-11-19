@@ -3,13 +3,22 @@ using MongoDB.Bson;
 
 namespace Reservas.Models
 {
-    public class Service
-    {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string? Id_Service { get; set; }
+	/// <summary>
+	/// Representa um serviço disponível no sistema, contendo uma descrição.
+	/// </summary>
+	public class Service
+	{
+		/// <summary>
+		/// Identificador único do serviço.
+		/// </summary>
+		[BsonId]
+		[BsonRepresentation(BsonType.ObjectId)]
+		public string? Id_Service { get; set; }
 
-        [BsonElement("descricao")]
-        public string? descricao { get; set; }
-    }
+		/// <summary>
+		/// Descrição do serviço.
+		/// </summary>
+		[BsonElement("descricao")]
+		public string? Descricao { get; set; }
+	}
 }
