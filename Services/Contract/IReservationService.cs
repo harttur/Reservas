@@ -24,4 +24,5 @@ namespace Reservas.Services.Contract
 		/// Cria uma nova reserva.
 		/// </summary>
 		/// <param name="reservationDto">Objeto ReservationDto contendo os detalhes d
-
+	}
+}
