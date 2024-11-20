@@ -1,4 +1,5 @@
 using Microsoft.IdentityModel.Tokens;
+using Reservas.Configurations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;

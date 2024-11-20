@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Reservas.Dtos;
+using Reservas.Models;
 using Reservas.Services.Contract;
 using Reservas.Services;
+using Auth0.ManagementApi.Models.Rules;
+using Reservas.Dtos;
 
 namespace Reservas.Controllers
 {
@@ -32,16 +34,17 @@ namespace Reservas.Controllers
 		/// <param name="request">Dados do login.</param>
 		/// <returns>Token JWT caso as credenciais sejam válidas.</returns>
 		[HttpPost("login")]
-		public IActionResult Login([FromBody] LoginRequest request)
+		public IActionResult Login([FromBody] LoginRequestDto request)
 		{
 			// Valida as credenciais usando um serviço de usuários
 			var user = _userService.ValidateUser(request.Username, request.Password);
 
-			if (user == null)
-				return Unauthorized("Usuário ou senha inválidos.");
+			if (request is null || string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password))
+			{ return BadRequest("Usuário ou senha inválidos."); }
+				
 
 			// Gera o token caso as credenciais sejam válidas
-			var token = _tokenService.GenerateToken(user.Id, user.Username);
+			var token = _tokenService.GenerateToken(request.Username, request.Password);
 
 			return Ok(new
 			{

@@ -1,4 +1,9 @@
-﻿[Route("api/[controller]")]
+﻿using Microsoft.AspNetCore.Mvc;
+using Reservas.Dtos;
+using Reservas.Models;
+using Reservas.Services.Contract;
+
+[Route("api/[controller]")]
 [ApiController]
 public class LoginResponseController : ControllerBase
 {

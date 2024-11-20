@@ -7,13 +7,11 @@ using Reservas.Services.Contract;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
-using BCrypt.Net;
 
 namespace Reservas.Services
 {
-	public class UserService : IUserService
-	{
+    public class UserService : IUserService
+    {
 		private readonly IUserRepository _userRepository;
 		private readonly string _jwtSecret;
 		private readonly string _jwtIssuer;
@@ -80,24 +78,13 @@ namespace Reservas.Services
 			await _userRepository.UpdateAsync(id_user, updatedUser);
 		}
 
-		public async Task<UserDto> Authenticate(string username, string password)
-		{
-			var user = await _userRepository.GetUserByUsername(username);
-			if (user == null || !VerifyPassword(user.Password, password))
-			{
-				throw new AuthenticationException("Usuário ou senha inválidos.");
-			}
-
-			return UserMapper.ToDto(user);  // Retorna o usuário mapeado para um DTO
-		}
-
-		public string GenerateJwtToken(User user)
-		{
+        public string GenerateJwtToken(string name)
+        {
 			var claims = new[]
 			{
-				new Claim(JwtRegisteredClaimNames.Sub, user.Name),
-				new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-			};
+                 new Claim(ClaimTypes.Name, name),
+			     new Claim(ClaimTypes.Role, "User")
+            };
 
 			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSecret));
 			var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -122,5 +109,35 @@ namespace Reservas.Services
 		{
 			return BCrypt.Net.BCrypt.HashPassword(password); // Gera o hash com bcrypt
 		}
-	}
+
+        public string Authenticate(string username, string password)
+        {
+            // Simulando uma busca de usuário no banco de dados
+            var users = new List<User>
+    {
+        new User { Name = "admin", Password = BCrypt.Net.BCrypt.HashPassword("1234") },
+        new User { Name = "user1", Password = BCrypt.Net.BCrypt.HashPassword("password1") }
+    };
+
+            // Procurar o usuário pelo nome de usuário
+            var user = users.FirstOrDefault(u => u.Name == username);
+
+            if (user == null)
+            {
+                return "Usuário não encontrado";
+            }
+
+            // Verificar a senha usando BCrypt
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(password, user.Password);
+
+            if (!isPasswordValid)
+            {
+                return "Senha inválida";
+            }
+
+            // Gerar um token ou retornar uma mensagem de sucesso
+            return "Autenticação bem-sucedida! Token de acesso: [ExemploToken]";
+        }
+
+    }
 }

@@ -6,6 +6,7 @@ using Reservas.Services.Contract;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
+using System.Data.Entity;
 
 namespace Reservas.Services
 {
@@ -13,9 +14,10 @@ namespace Reservas.Services
 	{
 		private readonly IServiceRepository _serviceRepository;
 		private readonly ILogger<ServiceService> _logger;
+        private readonly AppDbContext _dbContext;
 
-		// Construtor com injeção de dependências
-		public ServiceService(IServiceRepository serviceRepository, ILogger<ServiceService> logger)
+        // Construtor com injeção de dependências
+        public ServiceService(IServiceRepository serviceRepository, ILogger<ServiceService> logger)
 		{
 			_serviceRepository = serviceRepository;
 			_logger = logger;
@@ -95,5 +97,19 @@ namespace Reservas.Services
 
 			return serviceDto;
 		}
-	}
+
+        public ServiceService(AppDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+
+        public async Task<List<Service>> GetAllServicesAsync(CancellationToken cancellationToken)
+        {
+            // Recupera todos os serviços do banco de dados
+            return await _dbContext.Services
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+        }
+
+    }
 }
